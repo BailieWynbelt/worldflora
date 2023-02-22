@@ -9,4 +9,72 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Install and load packages
+```{r}
+#install.packages("WorldFlora")
+library(WorldFlora)
+library(tidyverse)
+```
 
+Download and remember data set
+```{r}
+WFO.download()
+WFO.remember(file.choose(".../classification.csv"))
+```
+
+Read in trnL data
+```{r}
+test_plants <- read_csv("../trnL_reads_WeeTU.csv")
+```
+
+Match trnL data with WFO data
+```{r}
+test_plants.match <- WFO.match(spec.data = test_plants, 
+                               WFO.data = WFO.data,
+                               spec.name = 'sci_name_profID', 
+                               Authorship = '', 
+                               First.dist = TRUE, 
+                               Fuzzy.min = TRUE, 
+                               Fuzzy = 0.1, 
+                               Fuzzy.max = 250, 
+                               Fuzzy.two = TRUE, 
+                               Fuzzy.one = TRUE, 
+                               squish = TRUE, 
+                               spec.name.tolower = FALSE, 
+                               spec.name.nonumber = TRUE, 
+                               spec.name.nobrackets = TRUE, 
+                               exclude.infraspecific = FALSE, 
+                               verbose = TRUE, 
+                               counter = 1000)
+```
+
+
+Check for the best single match
+```{r}
+test_plants_match.one <- WFO.one(test_plants.match, 
+                    priority='Accepted', 
+                    spec.name='sci_name_profID', 
+                    Auth.dist='', 
+                    First.dist='First.dist', 
+                    verbose=TRUE, 
+                    counter=1000)
+```
+
+
+Select plants that had fuzzy values and select needed columns
+```{r}
+fuzzy_plants <- test_plants_match.one %>% 
+  filter(Fuzzy == 'TRUE') %>% 
+  select(sci_name_profID, 
+         taxonID,
+         Fuzzy, 
+         scientificName, 
+         family, 
+         genus,
+         specificEpithet,
+         taxonomicStatus,
+         New.accepted,
+         Old.name)
+```
+
+Change outdated names to WFO names
