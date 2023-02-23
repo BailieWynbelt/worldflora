@@ -36,6 +36,11 @@ trnL_plant_species$Species <- gsub("_"," ", trnL_plant_species$Species)
 
 ```
 
+Replace "_" with a space in tidyverse
+```{r tidyverse stringr}
+stringr::str_replace()
+```
+
 Match trnL data with WFO data
 ```{r WFO match}
 test_plants_match <- WFO.match(spec.data = trnL_plant_species, 
@@ -74,10 +79,19 @@ fuzzy_plants_trnL <- trnL_plants_match %>%
 
 Add updated names to trnL data
 ```{r update trnL file}
-updated_trnL <- trnL_plants %>% 
+updated_trnL <- trnL_plant_species %>% 
   left_join(fuzzy_plants_trnL, by = "Species") 
 
 updated_trnL <- updated_trnL %>% 
   rename(updated.Name = scientificName) %>% 
-  select(-c(Fuzzy, Old.name, taxonomicStatus))
+  select(-c(Fuzzy, Old.name, taxonomicStatus)) %>% 
+  distinct()
+```
+
+Replace old names with new names in trnL file
+```{r replace names}
+updated_2<- updated_trnL %>% 
+  mutate(Species = if_else(!is.na(updated.Name),
+                           true = updated.Name,
+                           false = Species))
 ```
