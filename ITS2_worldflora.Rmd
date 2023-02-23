@@ -1,0 +1,80 @@
+---
+title: "ITS2 worldflora"
+author: "Bailie Wynbelt"
+date: "2023-02-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Install and load packages
+```{r install packages}
+library(WorldFlora)
+library(tidyverse)
+```
+
+Download and remember data set
+```{r WFO.remember}
+WFO.remember(file.choose(".../classification.csv"))
+```
+
+Read in ITS2 data
+```{r read data}
+ITS2_plants <- read_csv("../ITS2_reads_WeeTU.csv")
+```
+
+Select needed data and replace "__" with a space
+```{r fix data frame}
+ITS2_plant_species <- ITS2_plants %>% 
+  select(Species) %>% 
+  distinct()
+
+ITS2_plant_species$Species <- gsub("_"," ", ITS2_plant_species$Species)
+```
+
+Match ITS2 data with WFO data
+```{r WFO match}
+ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species, 
+                               WFO.data = WFO.data,
+                               spec.name = 'Species', 
+                               Authorship = '', 
+                               First.dist = TRUE, 
+                               Fuzzy.min = TRUE, 
+                               Fuzzy = 0.1, 
+                               Fuzzy.max = 250, 
+                               Fuzzy.two = TRUE, 
+                               Fuzzy.one = TRUE, 
+                               squish = TRUE, 
+                               spec.name.tolower = FALSE, 
+                               spec.name.nonumber = TRUE, 
+                               spec.name.nobrackets = TRUE, 
+                               exclude.infraspecific = FALSE, 
+                               verbose = TRUE, 
+                               counter = 1000)
+```
+
+Select plants that had fuzzy values and select needed columns
+```{r select data}
+fuzzy_plants_ITS2 <- ITS2_plants_match %>% 
+  filter(Fuzzy == 'TRUE') %>% 
+  select(Fuzzy,
+         Old.name,
+         Species,
+         scientificName, 
+         taxonID,
+         taxonomicStatus,
+         New.accepted)
+```
+
+Add updated names to ITS2 data
+```{r update ITS2 data}
+updated_ITS2 <- ITS2_plants %>% 
+  left_join(fuzzy_plants_ITS2, by = "Species") 
+
+updated_ITS2 <- updated_ITS2 %>% 
+  rename(updated.Name = scientificName) %>% 
+  select(-c(Fuzzy, Old.name, taxonomicStatus, New.accepted)) 
+
+```

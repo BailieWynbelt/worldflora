@@ -1,0 +1,83 @@
+---
+title: "trnL worldflora"
+author: "Bailie Wynbelt"
+date: "2023-02-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Install and load packages
+```{r load packages}
+library(WorldFlora)
+library(tidyverse)
+```
+
+Download and remember data set
+```{r WFO remember}
+WFO.download()
+WFO.remember(file.choose(".../classification.csv"))
+```
+
+Read in trnL data
+```{r read data}
+trnL_plants <- read_csv("../trnL_reads_WeeTU.csv")
+```
+
+Select needed data and replace underscore with space
+```{r manipulate data}
+trnL_plant_species <- trnL_plants %>% 
+  select(Species) %>% 
+  distinct()
+
+trnL_plant_species$Species <- gsub("_"," ", trnL_plant_species$Species)
+
+```
+
+Match trnL data with WFO data
+```{r WFO match}
+test_plants_match <- WFO.match(spec.data = trnL_plant_species, 
+                               WFO.data = WFO.data,
+                               spec.name = 'sci_name_profID', 
+                               Authorship = '', 
+                               First.dist = TRUE, 
+                               Fuzzy.min = TRUE, 
+                               Fuzzy = 0.1, 
+                               Fuzzy.max = 250, 
+                               Fuzzy.two = TRUE, 
+                               Fuzzy.one = TRUE, 
+                               squish = TRUE, 
+                               spec.name.tolower = FALSE, 
+                               spec.name.nonumber = TRUE, 
+                               spec.name.nobrackets = TRUE, 
+                               exclude.infraspecific = FALSE, 
+                               verbose = TRUE, 
+                               counter = 1000)
+```
+
+
+Select plants that had fuzzy values and select needed columns
+```{r select data}
+fuzzy_plants_trnL <- trnL_plants_match %>% 
+  filter(Fuzzy == 'TRUE') %>% 
+  select(Fuzzy,
+         Old.name,
+         Species,
+         scientificName, 
+         taxonID,
+         taxonomicStatus,
+         New.accepted)
+```
+
+
+Add updated names to trnL data
+```{r update trnL file}
+updated_trnL <- trnL_plants %>% 
+  left_join(fuzzy_plants_trnL, by = "Species") 
+
+updated_trnL <- updated_trnL %>% 
+  rename(updated.Name = scientificName) %>% 
+  select(-c(Fuzzy, Old.name, taxonomicStatus))
+```

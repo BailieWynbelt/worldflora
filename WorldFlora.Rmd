@@ -1,0 +1,77 @@
+---
+title: "World Flora"
+author: "Ellen Bledsoe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# World Flora
+This is an attempt to clean up plant names in the trnL and ITS2 OTU files.
+
+## Explore the World Flora R package
+
+Install and load the package
+```{r}
+#install.packages("WorldFlora")
+library(WorldFlora)
+library(tidyverse)
+```
+
+Download the up-to-date backbone.
+```{r}
+# download
+# WFO.download()
+
+# load into workspace?
+WFO.remember(WFO.file = "../classification.csv")
+```
+
+Explore the data with an example from the WorldFlora PDF
+```{r}
+head(WFO.data)
+
+# data from WorldFlora PDF
+Sapotaceae <- WFO.data[WFO.data$family == "Sapotaceae",]
+Sapotaceae <- Sapotaceae[Sapotaceae$taxonRank == "species", ]
+Sapotaceae <- Sapotaceae[Sapotaceae$taxonomicStatus == "Accepted", ]
+Sapotaceae <- Sapotaceae[, c("scientificName", "scientificNameAuthorship")]
+Sapotaceae <- data.frame(ID = c(1:nrow(Sapotaceae)), Sapotaceae)
+names(Sapotaceae)[2:3] <- c("species.name", "author")
+head(Sapotaceae)
+```
+
+Test out the data with an old plant name: _Panicum arizonicum_ is now _Urochloa arizonica_.
+```{r}
+# Find Panicum arizonicum records, if they exist
+pani_ariz <- WFO.data %>% 
+  filter(scientificName == "Panicum arizonicum")
+pani_ariz
+
+# get "accepted name" ID
+pani_ariz_ID <- pani_ariz %>% select(acceptedNameUsageID)
+pani_ariz_ID
+
+updated_name <- semi_join(WFO.data,
+                          pani_ariz_ID,
+                          by = c("taxonID" = "acceptedNameUsageID")) %>% 
+  select(scientificName)
+updated_name
+```
+
+It works! How would we expand this into a functional for loop?
+
+Things to consider:
+  
+  - whether name in OTU/WTU csv has synonyms (might not need this if written correctly...)
+  - whether name in OTU/WTU csv is "Accepted" or not
+  - species names in OTU/WTU need to be cleaned (separators, varietals, etc.)
+  - what to do with plants with no species-level id
+```{r}
+
+```
+  
+  
