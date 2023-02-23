@@ -2,7 +2,7 @@
 title: "trnL worldflora"
 author: "Bailie Wynbelt"
 date: "2023-02-22"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -17,13 +17,13 @@ library(tidyverse)
 
 Download and remember data set
 ```{r WFO remember}
-WFO.download()
-WFO.remember(file.choose(".../classification.csv"))
+#WFO.download()
+WFO.remember(WFO.file = "classification.csv")
 ```
 
 Read in trnL data
 ```{r read data}
-trnL_plants <- read_csv("../trnL_reads_WeeTU.csv")
+trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
 ```
 
 Select needed data and replace underscore with space
@@ -43,9 +43,12 @@ stringr::str_replace()
 
 Match trnL data with WFO data
 ```{r WFO match}
-test_plants_match <- WFO.match(spec.data = trnL_plant_species, 
+# need to convert trnL_plant_species from a tibble to a dataframe
+trnL_plant_species <- as.data.frame(trnL_plant_species)
+
+trnL_plant_match <- WFO.match(spec.data = trnL_plant_species, 
                                WFO.data = WFO.data,
-                               spec.name = 'sci_name_profID', 
+                               spec.name = "Species", 
                                Authorship = '', 
                                First.dist = TRUE, 
                                Fuzzy.min = TRUE, 
@@ -60,6 +63,8 @@ test_plants_match <- WFO.match(spec.data = trnL_plant_species,
                                exclude.infraspecific = FALSE, 
                                verbose = TRUE, 
                                counter = 1000)
+
+# write_csv(trnL_plant_match, "data/trnL_plant_matches.csv")
 ```
 
 
