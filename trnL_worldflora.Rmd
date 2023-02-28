@@ -24,6 +24,9 @@ WFO.remember(WFO.file = "classification.csv")
 Read in trnL data
 ```{r read data}
 trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
+
+trnL_plants <- trnL_plants %>% 
+  mutate(Species = str_replace_all(Species, "_", " "))
 ```
 
 Select needed data and replace underscore with space
@@ -37,7 +40,6 @@ trnL_plant_species <- as.data.frame(trnL_plant_species)
 
 trnL_plant_species <- trnL_plant_species %>% 
   mutate(Species = str_replace(Species, "_", " "))
-trnL_plant_species$Species <- gsub("_"," ", trnL_plant_species$Species)
 
 ```
 
@@ -87,7 +89,7 @@ fuzzy_plants_trnL <- trnL_plants_match %>%
 
 Add updated names to trnL data
 ```{r update trnL file}
-updated_trnL <- trnL_plant_species %>% 
+updated_trnL <- trnL_plants %>% 
   left_join(fuzzy_plants_trnL, by = "Species") 
 
 updated_trnL <- updated_trnL %>% 
