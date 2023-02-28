@@ -21,7 +21,7 @@ Download and remember data set
 WFO.remember(WFO.file = "classification.csv")
 ```
 
-Read in trnL data
+Read in trnL data and replace underscore with space
 ```{r read data}
 trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
 
@@ -29,7 +29,13 @@ trnL_plants <- trnL_plants %>%
   mutate(Species = str_replace_all(Species, "_", " "))
 ```
 
-Select needed data and replace underscore with space
+Replace "_" with a space with gsub
+```{r gsub}
+#not required to run but here for another example of how to replace characters
+trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
+```
+
+Select needed data for WFO.match()
 ```{r manipulate data}
 trnL_plant_species <- trnL_plants %>% 
   select(Species) %>% 
@@ -38,15 +44,6 @@ trnL_plant_species <- trnL_plants %>%
 # need to convert trnL_plant_species from a tibble to a dataframe
 trnL_plant_species <- as.data.frame(trnL_plant_species)
 
-trnL_plant_species <- trnL_plant_species %>% 
-  mutate(Species = str_replace(Species, "_", " "))
-
-```
-
-Replace "_" with a space with gsub
-```{r gsub}
-#not required to run but here for another example of how to replace characters
-trnL_plant_species$Species <- gsub("_"," ", trnL_plant_species$Species)
 ```
 
 Match trnL data with WFO data
@@ -86,7 +83,6 @@ fuzzy_plants_trnL <- trnL_plants_match %>%
          New.accepted)
 ```
 
-
 Add updated names to trnL data
 ```{r update trnL file}
 updated_trnL <- trnL_plants %>% 
@@ -95,13 +91,19 @@ updated_trnL <- trnL_plants %>%
 updated_trnL <- updated_trnL %>% 
   rename(updated.Name = scientificName) %>% 
   select(-c(Fuzzy, Old.name, taxonomicStatus)) %>% 
-  distinct()
+  distinct() 
 ```
 
 Replace old names with new names in trnL file
 ```{r replace names}
-updated_2<- updated_trnL %>% 
+final_updated_trnL<- updated_trnL %>% 
   mutate(Species = if_else(!is.na(updated.Name),
                            true = updated.Name,
                            false = Species))
+```
+
+```{r quality check}
+final_updated_trnL %>% 
+  filter(Species == "Poa serpana")
+```
 ```
