@@ -2,7 +2,7 @@
 title: "ITS2 worldflora"
 author: "Bailie Wynbelt"
 date: "2023-02-23"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -16,22 +16,35 @@ library(tidyverse)
 ```
 
 Download and remember data set
-```{r WFO.remember}
-WFO.remember(file.choose(".../classification.csv"))
+```{r WFO remember}
+#WFO.download()
+WFO.remember(WFO.file = "classification.csv")
 ```
 
-Read in ITS2 data
+Read in ITS2 data and mutate species column
 ```{r read data}
-ITS2_plants <- read_csv("../ITS2_reads_WeeTU.csv")
+ITS2_plants <- read_csv("data/ITS2_reads_WeeTU.csv")
+
+ITS2_plants <- ITS2_plants %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+  mutate(Species = str_replace_all(Species,"^(\\S*\\s+\\S+).*", "\\1"))
 ```
 
-Select needed data and replace "__" with a space
-```{r fix data frame}
+Replace "_" with a space with gsub
+```{r gsub}
+#not required to run but here for another example of how to replace characters
+ITS2_plants$Species <- gsub("_"," ", ITS2_plants$Species)
+```
+
+Select needed data for WFO.match() and convert to dataframe
+```{r manipulate data}
 ITS2_plant_species <- ITS2_plants %>% 
   select(Species) %>% 
   distinct()
 
-ITS2_plant_species$Species <- gsub("_"," ", ITS2_plant_species$Species)
+# need to convert trnL_plant_species from a tibble to a dataframe
+ITS2_plant_species <- as.data.frame(ITS2_plant_species)
+
 ```
 
 Match ITS2 data with WFO data
@@ -56,7 +69,7 @@ ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species,
 ```
 
 Select plants that had fuzzy values and select needed columns
-```{r select data}
+```{r Select data}
 fuzzy_plants_ITS2 <- ITS2_plants_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
@@ -68,13 +81,54 @@ fuzzy_plants_ITS2 <- ITS2_plants_match %>%
          New.accepted)
 ```
 
-Add updated names to ITS2 data
-```{r update ITS2 data}
+Remove rows that are not needed 
+```{r row removal}
+#split into two columns
+fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
+  separate(Species, c('Species', 'Specific.epithet'))
+
+
+#remove rows from specific epithet column that are not needed
+fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
+  filter(Specific.epithet != "sp",
+         Specific.epithet != "Castanea",
+         Specific.epithet != "aff",
+         Specific.epithet != "hybrid")
+
+#combine species and specific epithet columns, fix formatting of Species column and data frame
+fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
+  unite(Species, Species, Specific.epithet) %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) 
+  
+```
+
+Add updated names to trnL data
+```{r update trnL file}
 updated_ITS2 <- ITS2_plants %>% 
-  left_join(fuzzy_plants_ITS2, by = "Species") 
+  left_join(fuzzy_plants_trnL, by = "Species") 
 
 updated_ITS2 <- updated_ITS2 %>% 
   rename(updated.Name = scientificName) %>% 
-  select(-c(Fuzzy, Old.name, taxonomicStatus, New.accepted)) 
+  select(-c(Fuzzy, Old.name, taxonomicStatus)) %>% 
+  distinct() 
+```
+
+Replace old names with new names in trnL file
+```{r replace names}
+final_updated_ITS2 <- updated_ITS2 %>% 
+  mutate(Species = if_else(!is.na(updated.Name),
+                           true = updated.Name,
+                           false = Species))
+```
+
+Quality check to make sure it worked! 
+```{r quality check}
+final_updated_ITS2 %>% 
+  filter(Species == "Poa serpana")
+```
+
+Save final dataframe as a csv
+```{r save as csv}
+
 
 ```
