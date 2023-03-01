@@ -21,12 +21,13 @@ Download and remember data set
 WFO.remember(WFO.file = "classification.csv")
 ```
 
-Read in trnL data and replace underscore with space
+Read in trnL data and mutate species column
 ```{r read data}
 trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
 
 trnL_plants <- trnL_plants %>% 
-  mutate(Species = str_replace_all(Species, "_", " "))
+  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+  mutate(Species = str_replace_all(Species,"^(\\S*\\s+\\S+).*", "\\1"))
 ```
 
 Replace "_" with a space with gsub
@@ -69,9 +70,8 @@ trnL_plant_match <- WFO.match(spec.data = trnL_plant_species,
 # write_csv(trnL_plant_match, "data/trnL_plant_matches.csv")
 ```
 
-
 Select plants that had fuzzy values and select needed columns
-```{r select data}
+```{r Select data}
 fuzzy_plants_trnL <- trnL_plants_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
@@ -81,6 +81,27 @@ fuzzy_plants_trnL <- trnL_plants_match %>%
          taxonID,
          taxonomicStatus,
          New.accepted)
+```
+
+Remove rows that are not needed 
+```{r row removal}
+#split into two columns
+fuzzy_plants_trnL <- fuzzy_plants_trnL %>% 
+  separate(Species, c('Species', 'Specific.epithet'))
+
+
+#remove rows from specific epithet column that are not needed
+fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
+  filter(Specific.epithet != "sp",
+         Specific.epithet != "Castanea",
+         Specific.epithet != "aff",
+         Specific.epithet != "hybrid")
+
+#combine species and specific epithet columns, fix formatting of Species column and data frame
+fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
+  unite(Species, Species, Specific.epithet) %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) 
+  
 ```
 
 Add updated names to trnL data
@@ -102,8 +123,8 @@ final_updated_trnL<- updated_trnL %>%
                            false = Species))
 ```
 
+Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_trnL %>% 
   filter(Species == "Poa serpana")
-```
 ```
