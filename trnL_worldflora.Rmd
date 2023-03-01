@@ -36,7 +36,7 @@ Replace "_" with a space with gsub
 trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
 ```
 
-Select needed data for WFO.match()
+Select needed data for WFO.match() and convert to dataframe
 ```{r manipulate data}
 trnL_plant_species <- trnL_plants %>% 
   select(Species) %>% 
@@ -127,4 +127,10 @@ Quality check to make sure it worked!
 ```{r quality check}
 final_updated_trnL %>% 
   filter(Species == "Poa serpana")
+```
+
+Save final dataframe as a csv
+```{r save as csv}
+
+
 ```
