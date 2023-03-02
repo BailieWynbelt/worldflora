@@ -28,6 +28,13 @@ ITS2_plants <- read_csv("data/ITS2_reads_WeeTU.csv")
 ITS2_plants <- ITS2_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
   mutate(Species = str_replace_all(Species,"^(\\S*\\s+\\S+).*", "\\1"))
+
+# ITS2_name_issues <- ITS2_plants %>% 
+#   distinct(Species) %>% 
+#   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+#   mutate(n_words = str_count(Species, "\\w+")) %>% 
+#   filter(n_words > 2)
+# write_csv(ITS2_name_issues, "data/ITS2_name_issues.csv")
 ```
 
 Replace "_" with a space with gsub
