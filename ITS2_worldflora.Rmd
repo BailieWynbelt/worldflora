@@ -90,10 +90,7 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
 
 #remove rows from specific epithet column that are not needed
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
-  filter(Specific.epithet != "sp",
-         Specific.epithet != "Castanea",
-         Specific.epithet != "aff",
-         Specific.epithet != "hybrid")
+  filter(Specific.epithet != "construct")
 
 #combine species and specific epithet columns, fix formatting of Species column and data frame
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
@@ -105,7 +102,7 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
 Add updated names to trnL data
 ```{r update trnL file}
 updated_ITS2 <- ITS2_plants %>% 
-  left_join(fuzzy_plants_trnL, by = "Species") 
+  left_join(fuzzy_plants_ITS2, by = "Species") 
 
 updated_ITS2 <- updated_ITS2 %>% 
   rename(updated.Name = scientificName) %>% 
@@ -124,7 +121,7 @@ final_updated_ITS2 <- updated_ITS2 %>%
 Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_ITS2 %>% 
-  filter(Species == "Poa serpana")
+  filter(Species == "Euphorbia serpyllifolia")
 ```
 
 Save final dataframe as a csv
