@@ -131,6 +131,5 @@ final_updated_trnL %>%
 
 Save final dataframe as a csv
 ```{r save as csv}
-
-
+write_csv(final_updated_trnL, "data_output/updated_trnL_reads_WeeTU.csv")
 ```
