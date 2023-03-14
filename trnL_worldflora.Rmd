@@ -21,26 +21,66 @@ Download and remember data set
 WFO.remember(WFO.file = "classification.csv")
 ```
 
-Read in trnL data and mutate species column
+Read in trnL data
 ```{r read data}
-trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
+trnL_plants <- read_csv("WorldFlora/data/trnL_reads_WeeTU.csv")
+```
 
-trnL_plants <- trnL_plants %>% 
-  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-  mutate(Species = str_replace_all(Species,"^(\\S*\\s+\\S+).*", "\\1"))
+Find name issues in trnL data
+```{r create csv of bad names}
+trnL_name_issues <- trnL_plants %>% 
+   distinct(Species) %>% 
+   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+   mutate(n_words = str_count(Species, "\\w+")) %>% 
+   filter(n_words > 2)
 
-# trnL_name_issues <- trnL_plants %>% 
-#   distinct(Species) %>% 
-#   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-#   mutate(n_words = str_count(Species, "\\w+")) %>% 
-#   filter(n_words > 2)
-# write_csv(trnL_name_issues, "data/trnL_name_issues.csv")
+write_csv(trnL_name_issues, "WorldFlora/data/trnL_name_issues.csv")
 ```
 
 Replace "_" with a space with gsub
 ```{r gsub}
 #not required to run but here for another example of how to replace characters
 trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
+```
+
+Fix naming issues
+```{r fix bad names}
+trnL_plants <- trnL_plants %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+  mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "Chamaecrista sp."),
+         Species = replace(Species, Species == "Setaria sp  TRK-2015", "Setaria sp."),
+         Species = replace(Species, Species == "Sanango sp  Bremer 3352", "Sanango sp."),
+         Species = replace(Species, Species == "Helichrysum sp  TRK-2015", "Helichrysum sp."),
+         Species = replace(Species, Species == "Taraxacum sect  Naevosa sp  6281f", "Taraxacum (sect Naevosa) sp."),
+         Species = replace(Species, Species == "Muehlenbeckia sp  Mt Brockman L A Craven 2357 K L Wilson & Makinson", "Muehlenbeckia sp."),
+         Species = replace(Species, Species == "Sida sp  TRK-2015", "Sida sp."),
+         Species = replace(Species, Species == "Eragrostis sp  TRK-2015", "Eragrostis sp."),
+         Species = replace(Species, Species == "Dypsis sp  Mada25", "Dypsis sp."),
+         Species = replace(Species, Species == "Quercus sp  MES114", "Quercus sp."),
+         Species = replace(Species, Species == "Ichnanthus sp  Silva et al  550", "Ichnanthus sp."),
+         Species = replace(Species, Species == "Juniperus hybrid sp  LO-2009", "Juniperus hybrid sp."),
+         Species = replace(Species, Species == "Solanum sp  TRK-2015", "Solanum sp."),
+         Species = replace(Species, Species == "Pavonia sp  TRK-2015", "Pavonia sp."),
+         Species = replace(Species, Species == "Asteraceae sp  TRK-2015", "Asteraceae sp."),
+         Species = replace(Species, Species == "Zygia sp  KGD-2009", "Zygia sp."),
+         Species = replace(Species, Species == "Hildaea sp  Costa et al  903", "Hildaea sp."),
+         Species = replace(Species, Species == "Gazania sp  Koekemoer and Funk 1929", "Gazania sp,"),
+         Species = replace(Species, Species == "Digitaria sp  TRK-2015", "Digitaria sp."),
+         Species = replace(Species, Species == "Celtis sp  Mada221", "Celtis sp."),
+         Species = replace(Species, Species == "Nicotiana sp  'rastroensis'", "Nicotiana sp."),
+         Species = replace(Species, Species == "Castanopsis sp  'kuchugouzhui'", "Castanopsis sp."),
+         Species = replace(Species, Species == "Asteroideae sp  D3-001", "Asteroideae sp."),
+         Species = replace(Species, Species == "Operculina sp  Romero 1701", "Operculina sp."),
+         Species = replace(Species, Species == "Musa sp  Ogasawara06", "Musa sp."),
+         Species = replace(Species, Species == "Pithecellobium sp  DS14533 JM1598", "Pithecellobium sp."),
+         Species = replace(Species, Species == "Excoecaria sp  Pell 678", "Excoecaria sp."),
+         Species = replace(Species, Species == "Enneapogon sp  TRK-2015", "Enneapogon sp."),
+         Species = replace(Species, Species == "Phyllarthron sp  Mada29", "Phyllarthron sp."),
+         Species = replace(Species, Species == "Catalpa aff  speciosa Olmstead 88-003", "Catalpa aff."),
+         Species = replace(Species, Species == "Piresia sp  Hodkinson 601", "Piresia sp."),
+         Species = replace(Species, Species == "Calliandra sp  ERS-2013", "Calliandra sp."),
+         Species = replace(Species, Species == "Sclerophylax sp  Nee and Bohs 50857", "Sclerophylax sp."))
+
 ```
 
 Select needed data for WFO.match() and convert to dataframe
@@ -78,7 +118,7 @@ trnL_plant_match <- WFO.match(spec.data = trnL_plant_species,
 ```
 
 Select plants that had fuzzy values and select needed columns
-```{r Select data}
+```{r select data}
 fuzzy_plants_trnL <- trnL_plants_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
@@ -99,16 +139,13 @@ fuzzy_plants_trnL <- fuzzy_plants_trnL %>%
 
 #remove rows from specific epithet column that are not needed
 fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
-  filter(Specific.epithet != "sp",
-         Specific.epithet != "Castanea",
-         Specific.epithet != "aff",
-         Specific.epithet != "hybrid")
+  filter(Specific.epithet != "hybrid",
+         Specific.epithet != "sp")
 
 #combine species and specific epithet columns, fix formatting of Species column and data frame
 fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
   unite(Species, Species, Specific.epithet) %>% 
-  mutate(Species = str_replace_all(Species, "_", " ")) 
-  
+  mutate(Species = str_replace_all(Species, "_", " "))
 ```
 
 Add updated names to trnL data
@@ -139,4 +176,9 @@ final_updated_trnL %>%
 Save final dataframe as a csv
 ```{r save as csv}
 write_csv(final_updated_trnL, "data_output/updated_trnL_reads_WeeTU.csv")
+```
+
+Export to csv
+```{r export csv}
+write_csv(trnl_updated, "data/trnL_updated.csv")
 ```
