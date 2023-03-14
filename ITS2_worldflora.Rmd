@@ -24,17 +24,17 @@ WFO.remember(WFO.file = "classification.csv")
 Read in ITS2 data and mutate species column
 ```{r read data}
 ITS2_plants <- read_csv("data/ITS2_reads_WeeTU.csv")
+```
 
-ITS2_plants <- ITS2_plants %>% 
-  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-  mutate(Species = str_replace_all(Species,"^(\\S*\\s+\\S+).*", "\\1"))
+Find name issues in ITS2 data
+```{r create csv of bad names}
+ITS2_name_issues <- ITS2_plants %>% 
+   distinct(Species) %>% 
+   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+   mutate(n_words = str_count(Species, "\\w+")) %>% 
+   filter(n_words > 2)
 
-# ITS2_name_issues <- ITS2_plants %>% 
-#   distinct(Species) %>% 
-#   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-#   mutate(n_words = str_count(Species, "\\w+")) %>% 
-#   filter(n_words > 2)
-# write_csv(ITS2_name_issues, "data/ITS2_name_issues.csv")
+write_csv(ITS2_name_issues, "data/ITS2_name_issues.csv")
 ```
 
 Replace "_" with a space with gsub
@@ -43,13 +43,28 @@ Replace "_" with a space with gsub
 ITS2_plants$Species <- gsub("_"," ", ITS2_plants$Species)
 ```
 
+Fix naming issues
+```{r fix bad names}
+ITS2_plants <- ITS2_plants %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+  mutate(Species = replace(Species, Species == "Croton sp. BWvE-2009", "Croton sp."),
+         Species = replace(Species, Species == "Marina sp. Lavin 5341", "Marina sp."),
+         Species = replace(Species, Species == "Hebecarpa cf. barbeyana Abbott 14637", "Hebecarpa cf. barbeyana"),
+         Species = replace(Species, Species == "Helichrysum sp. Vitek 02350", "Helichrysum sp."),
+         Species = replace(Species, Species == "Parakeelya sp. AQ743890", "Parakeelya sp."),
+         Species = replace(Species, Species == "Lupinus sp. AT-2012", "Lupinus sp."),
+         Species = replace(Species, Species == "Plantago sp. PLANT", "Plantago sp."),
+         Species = replace(Species, Species == "Opuntia cf. laevis FOS-2017", "Opuntia cf. laevis"),
+         Species = replace(Species, Species == "Echinocactus sp. MS-2016", "Echinocactus sp."))
+```
+
 Select needed data for WFO.match() and convert to dataframe
 ```{r manipulate data}
 ITS2_plant_species <- ITS2_plants %>% 
   select(Species) %>% 
   distinct()
 
-# need to convert trnL_plant_species from a tibble to a dataframe
+# need to convert ITS2_plant_species from a tibble to a dataframe
 ITS2_plant_species <- as.data.frame(ITS2_plant_species)
 
 ```
@@ -76,7 +91,7 @@ ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species,
 ```
 
 Select plants that had fuzzy values and select needed columns
-```{r Select data}
+```{r select data}
 fuzzy_plants_ITS2 <- ITS2_plants_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
@@ -97,7 +112,10 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
 
 #remove rows from specific epithet column that are not needed
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
-  filter(Specific.epithet != "construct")
+  filter(Specific.epithet != "tolaasii",
+         Specific.epithet != "construct",
+         Specific.epithet != "environmental",
+         Specific.epithet != "cerviana")
 
 #combine species and specific epithet columns, fix formatting of Species column and data frame
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
@@ -106,8 +124,8 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
   
 ```
 
-Add updated names to trnL data
-```{r update trnL file}
+Add updated names to ITS2 data
+```{r update ITS2 file}
 updated_ITS2 <- ITS2_plants %>% 
   left_join(fuzzy_plants_ITS2, by = "Species") 
 
@@ -117,7 +135,7 @@ updated_ITS2 <- updated_ITS2 %>%
   distinct() 
 ```
 
-Replace old names with new names in trnL file
+Replace old names with new names in ITS2 file
 ```{r replace names}
 final_updated_ITS2 <- updated_ITS2 %>% 
   mutate(Species = if_else(!is.na(updated.Name),
@@ -133,5 +151,5 @@ final_updated_ITS2 %>%
 
 Save final dataframe as a csv
 ```{r save as csv}
-write_csv(final_updated_ITS2, "data_output/updated_ITS2_reads_WeeTU.csv")
+write_csv(final_ITS2_updated, "data/updated_ITS2_reads_WeeTU.csv")
 ```
