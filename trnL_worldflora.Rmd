@@ -23,7 +23,7 @@ WFO.remember(WFO.file = "classification.csv")
 
 Read in trnL data
 ```{r read data}
-trnL_plants <- read_csv("WorldFlora/data/trnL_reads_WeeTU.csv")
+trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
 ```
 
 Find name issues in trnL data
@@ -34,7 +34,7 @@ trnL_name_issues <- trnL_plants %>%
    mutate(n_words = str_count(Species, "\\w+")) %>% 
    filter(n_words > 2)
 
-write_csv(trnL_name_issues, "WorldFlora/data/trnL_name_issues.csv")
+write_csv(trnL_name_issues, "data/trnL_name_issues.csv")
 ```
 
 Replace "_" with a space with gsub
