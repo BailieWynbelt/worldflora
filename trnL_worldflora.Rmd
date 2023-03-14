@@ -175,10 +175,5 @@ final_updated_trnL %>%
 
 Save final dataframe as a csv
 ```{r save as csv}
-write_csv(final_updated_trnL, "data_output/updated_trnL_reads_WeeTU.csv")
-```
-
-Export to csv
-```{r export csv}
-write_csv(trnl_updated, "data/trnL_updated.csv")
+write_csv(final_updated_trnL, "data/updated_trnL_reads_WeeTU.csv")
 ```
