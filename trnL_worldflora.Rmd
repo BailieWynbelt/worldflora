@@ -119,15 +119,19 @@ trnL_plant_match <- WFO.match(spec.data = trnL_plant_species,
 
 Select plants that had fuzzy values and select needed columns
 ```{r select data}
-fuzzy_plants_trnL <- trnL_plants_match %>% 
+fuzzy_plants_trnL <- trnL_plant_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
          Old.name,
+         family,
+         genus,
          Species,
          scientificName, 
          taxonID,
          taxonomicStatus,
          New.accepted)
+
+
 ```
 
 Remove rows that are not needed 
@@ -155,22 +159,34 @@ updated_trnL <- trnL_plants %>%
 
 updated_trnL <- updated_trnL %>% 
   rename(updated.Name = scientificName) %>% 
+  rename(updated.genus = genus) %>% 
+  rename(updated.family = family) %>% 
   select(-c(Fuzzy, Old.name, taxonomicStatus)) %>% 
   distinct() 
 ```
 
 Replace old names with new names in trnL file
 ```{r replace names}
-final_updated_trnL<- updated_trnL %>% 
+final_updated_trnL <- updated_trnL %>% 
   mutate(Species = if_else(!is.na(updated.Name),
                            true = updated.Name,
-                           false = Species))
+                           false = Species)) %>% 
+  mutate(Genus = if_else(!is.na(updated.genus),
+                           true = updated.genus,
+                           false = Genus)) %>% 
+  mutate(Family = if_else(!is.na(updated.family),
+                          true = updated.family,
+                          false = Family))
 ```
 
 Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_trnL %>% 
   filter(Species == "Poa serpana")
+
+final_updated_trnL %>% 
+  filter(Species == "Lycium bridgesii")
+
 ```
 
 Save final dataframe as a csv
