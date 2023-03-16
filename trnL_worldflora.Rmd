@@ -43,6 +43,13 @@ Replace "_" with a space with gsub
 trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
 ```
 
+Remove unneeded names
+```{r}
+trnL_plants<- trnL_plants %>%
+  filter(Species != "fossil Castanea pollen")
+
+```
+
 Fix naming issues
 ```{r fix bad names}
 trnL_plants <- trnL_plants %>% 
@@ -58,7 +65,7 @@ trnL_plants <- trnL_plants %>%
          Species = replace(Species, Species == "Dypsis sp  Mada25", "Dypsis sp."),
          Species = replace(Species, Species == "Quercus sp  MES114", "Quercus sp."),
          Species = replace(Species, Species == "Ichnanthus sp  Silva et al  550", "Ichnanthus sp."),
-         Species = replace(Species, Species == "Juniperus hybrid sp  LO-2009", "Juniperus hybrid sp."),
+         Species = replace(Species, Species == "Juniperus hybrid sp  LO-2009", "Juniperus sp."),
          Species = replace(Species, Species == "Solanum sp  TRK-2015", "Solanum sp."),
          Species = replace(Species, Species == "Pavonia sp  TRK-2015", "Pavonia sp."),
          Species = replace(Species, Species == "Asteraceae sp  TRK-2015", "Asteraceae sp."),
@@ -76,12 +83,13 @@ trnL_plants <- trnL_plants %>%
          Species = replace(Species, Species == "Excoecaria sp  Pell 678", "Excoecaria sp."),
          Species = replace(Species, Species == "Enneapogon sp  TRK-2015", "Enneapogon sp."),
          Species = replace(Species, Species == "Phyllarthron sp  Mada29", "Phyllarthron sp."),
-         Species = replace(Species, Species == "Catalpa aff  speciosa Olmstead 88-003", "Catalpa aff."),
+         Species = replace(Species, Species == "Catalpa aff  speciosa Olmstead 88-003", "Catalpa sp."),
          Species = replace(Species, Species == "Piresia sp  Hodkinson 601", "Piresia sp."),
          Species = replace(Species, Species == "Calliandra sp  ERS-2013", "Calliandra sp."),
          Species = replace(Species, Species == "Sclerophylax sp  Nee and Bohs 50857", "Sclerophylax sp."))
 
 ```
+
 
 Select needed data for WFO.match() and convert to dataframe
 ```{r manipulate data}

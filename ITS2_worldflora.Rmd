@@ -43,18 +43,26 @@ Replace "_" with a space with gsub
 ITS2_plants$Species <- gsub("_"," ", ITS2_plants$Species)
 ```
 
+Remove unneeded names
+```{r}
+ITS2_plants <- ITS2_plants %>%
+  filter(Species != "Cloning vector pOmni",
+         Species != "Rafinesquia environmental sample")
+
+```
+
 Fix naming issues
 ```{r fix bad names}
 ITS2_plants <- ITS2_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
   mutate(Species = replace(Species, Species == "Croton sp. BWvE-2009", "Croton sp."),
          Species = replace(Species, Species == "Marina sp. Lavin 5341", "Marina sp."),
-         Species = replace(Species, Species == "Hebecarpa cf. barbeyana Abbott 14637", "Hebecarpa cf. barbeyana"),
+         Species = replace(Species, Species == "Hebecarpa cf. barbeyana Abbott 14637", "Hebecarpa sp."),
          Species = replace(Species, Species == "Helichrysum sp. Vitek 02350", "Helichrysum sp."),
          Species = replace(Species, Species == "Parakeelya sp. AQ743890", "Parakeelya sp."),
          Species = replace(Species, Species == "Lupinus sp. AT-2012", "Lupinus sp."),
          Species = replace(Species, Species == "Plantago sp. PLANT", "Plantago sp."),
-         Species = replace(Species, Species == "Opuntia cf. laevis FOS-2017", "Opuntia cf. laevis"),
+         Species = replace(Species, Species == "Opuntia cf. laevis FOS-2017", "Opuntia sp."),
          Species = replace(Species, Species == "Echinocactus sp. MS-2016", "Echinocactus sp."))
 ```
 
@@ -156,10 +164,10 @@ final_updated_ITS2 <- updated_ITS2 %>%
 Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_ITS2 %>% 
-  filter(Species == "Kali turgida")
+  filter(Species == "Salsola kali")
 
 final_updated_ITS2 %>% 
-  filter(Species == "Solanum fructo-tecto")
+  filter(Species == "Solanum fructu-tecto")
 
 ```
 
