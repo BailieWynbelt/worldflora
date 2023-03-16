@@ -96,11 +96,14 @@ fuzzy_plants_ITS2 <- ITS2_plants_match %>%
   filter(Fuzzy == 'TRUE') %>% 
   select(Fuzzy,
          Old.name,
+         family,
+         genus,
          Species,
          scientificName, 
          taxonID,
          taxonomicStatus,
          New.accepted)
+
 ```
 
 Remove rows that are not needed 
@@ -131,25 +134,37 @@ updated_ITS2 <- ITS2_plants %>%
 
 updated_ITS2 <- updated_ITS2 %>% 
   rename(updated.Name = scientificName) %>% 
+  rename(updated.genus = genus) %>% 
+  rename(updated.family = family) %>% 
   select(-c(Fuzzy, Old.name, taxonomicStatus)) %>% 
   distinct() 
 ```
 
-Replace old names with new names in ITS2 file
+Replace old names, genus, and family with new names in ITS2 file
 ```{r replace names}
 final_updated_ITS2 <- updated_ITS2 %>% 
   mutate(Species = if_else(!is.na(updated.Name),
                            true = updated.Name,
-                           false = Species))
+                           false = Species)) %>% 
+  mutate(Genus = if_else(!is.na(updated.genus),
+                           true = updated.genus,
+                           false = Genus)) %>% 
+  mutate(Family = if_else(!is.na(updated.family),
+                          true = updated.family,
+                          false = Family))
 ```
 
 Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_ITS2 %>% 
-  filter(Species == "Euphorbia serpyllifolia")
+  filter(Species == "Kali turgida")
+
+final_updated_ITS2 %>% 
+  filter(Species == "Solanum fructo-tecto")
+
 ```
 
 Save final dataframe as a csv
 ```{r save as csv}
-write_csv(final_ITS2_updated, "data/updated_ITS2_reads_WeeTU.csv")
+write_csv(final_updated_ITS2, "data/updated_ITS2_reads_WeeTU.csv")
 ```
