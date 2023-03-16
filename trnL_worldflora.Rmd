@@ -130,8 +130,6 @@ fuzzy_plants_trnL <- trnL_plant_match %>%
          taxonID,
          taxonomicStatus,
          New.accepted)
-
-
 ```
 
 Remove rows that are not needed 
