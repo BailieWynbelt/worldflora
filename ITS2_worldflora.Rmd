@@ -115,10 +115,9 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
 
 #remove rows from specific epithet column that are not needed
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
-  filter(Specific.epithet != "tolaasii",
-         Specific.epithet != "construct",
+  filter(Specific.epithet != "construct",
          Specific.epithet != "environmental",
-         Specific.epithet != "cerviana")
+         Specific.epithet != "cerviana")  #ask about this
 
 #combine species and specific epithet columns, fix formatting of Species column and data frame
 fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>% 
