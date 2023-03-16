@@ -199,3 +199,24 @@ Save final dataframe as a csv
 ```{r save as csv}
 write_csv(final_updated_trnL, "data/updated_trnL_reads_WeeTU.csv")
 ```
+
+Recreate WTUs
+```{r}
+# Add WeeTUs for Summarizing
+# https://dplyr.tidyverse.org/reference/group_data.html
+taxa_data_trnL <- taxa_data_trnL %>% 
+  mutate(WTU.kingdom = group_indices(., Kingdom),
+         WTU.clade1 = group_indices(., Kingdom, Clade1),
+         WTU.clade2 = group_indices(., Kingdom, Clade1, Clade2),
+         WTU.order = group_indices(., Kingdom, Clade1, Clade2, Order),
+         WTU.family = group_indices(., Kingdom, Clade1, Clade2, Order, Family),
+         WTU.subfamily = group_indices(., Kingdom, Clade1, Clade2, Order, 
+                                       Family, Subfamily),
+         WTU.genus = group_indices(., Kingdom, Clade1, Clade2, Order, Family, 
+                                   Subfamily, Genus),
+         WTU.species = group_indices(., Kingdom, Clade1, Clade2, Order, Family, 
+                                     Subfamily, Genus, Species))
+
+#write_csv(taxa_data_trnL, "Data/SequencedData/Plants/ProcessedData/trnL_reads_WeeTU.csv")
+```
+
