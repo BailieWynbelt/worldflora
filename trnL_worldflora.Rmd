@@ -43,18 +43,11 @@ Replace "_" with a space with gsub
 trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
 ```
 
-Remove unneeded names
-```{r}
-trnL_plants<- trnL_plants %>%
-  filter(Species != "fossil Castanea pollen")
-
-```
-
 Fix naming issues
 ```{r fix bad names}
 trnL_plants <- trnL_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-  mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "Chamaecrista sp."),
+  mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "Chamaecrista sp."), #NA
          Species = replace(Species, Species == "Setaria sp  TRK-2015", "Setaria sp."),
          Species = replace(Species, Species == "Sanango sp  Bremer 3352", "Sanango sp."),
          Species = replace(Species, Species == "Helichrysum sp  TRK-2015", "Helichrysum sp."),
@@ -71,7 +64,7 @@ trnL_plants <- trnL_plants %>%
          Species = replace(Species, Species == "Asteraceae sp  TRK-2015", "Asteraceae sp."),
          Species = replace(Species, Species == "Zygia sp  KGD-2009", "Zygia sp."),
          Species = replace(Species, Species == "Hildaea sp  Costa et al  903", "Hildaea sp."),
-         Species = replace(Species, Species == "Gazania sp  Koekemoer and Funk 1929", "Gazania sp,"),
+         Species = replace(Species, Species == "Gazania sp  Koekemoer and Funk 1929", "Gazania sp."),
          Species = replace(Species, Species == "Digitaria sp  TRK-2015", "Digitaria sp."),
          Species = replace(Species, Species == "Celtis sp  Mada221", "Celtis sp."),
          Species = replace(Species, Species == "Nicotiana sp  'rastroensis'", "Nicotiana sp."),
@@ -90,10 +83,51 @@ trnL_plants <- trnL_plants %>%
 
 ```
 
+Replace species names with NA's
+```{r}
+trnL_plants <- trnL_plants %>% 
+  mutate(Species = str_replace_all(Species, "_", " ")) %>% 
+  mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "NA"),
+         Species = replace(Species, Species == "Setaria sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Sanango sp  Bremer 3352", "NA"),
+         Species = replace(Species, Species == "Helichrysum sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Taraxacum sect  Naevosa sp  6281f", "NA"),
+         Species = replace(Species, Species == "Muehlenbeckia sp  Mt Brockman L A Craven 2357 K L Wilson & Makinson", "NA"),
+         Species = replace(Species, Species == "Sida sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Eragrostis sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Dypsis sp  Mada25", "NA"),
+         Species = replace(Species, Species == "Quercus sp  MES114", "NA"),
+         Species = replace(Species, Species == "Ichnanthus sp  Silva et al  550", "NA"),
+         Species = replace(Species, Species == "Juniperus hybrid sp  LO-2009", "NA"),
+         Species = replace(Species, Species == "Solanum sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Pavonia sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Asteraceae sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Zygia sp  KGD-2009", "NA"),
+         Species = replace(Species, Species == "Hildaea sp  Costa et al  903", "NA"),
+         Species = replace(Species, Species == "Gazania sp  Koekemoer and Funk 1929", "NA"),
+         Species = replace(Species, Species == "Digitaria sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Celtis sp  Mada221", "NA"),
+         Species = replace(Species, Species == "Nicotiana sp  'rastroensis'", "NA"),
+         Species = replace(Species, Species == "Castanopsis sp  'kuchugouzhui'", "NA"),
+         Species = replace(Species, Species == "Asteroideae sp  D3-001", "NA"),
+         Species = replace(Species, Species == "Operculina sp  Romero 1701", "NA"),
+         Species = replace(Species, Species == "Musa sp  Ogasawara06", "NA"),
+         Species = replace(Species, Species == "Pithecellobium sp  DS14533 JM1598", "NA"),
+         Species = replace(Species, Species == "Excoecaria sp  Pell 678", "NA"),
+         Species = replace(Species, Species == "Enneapogon sp  TRK-2015", "NA"),
+         Species = replace(Species, Species == "Phyllarthron sp  Mada29", "NA"),
+         Species = replace(Species, Species == "Catalpa aff  speciosa Olmstead 88-003", "NA"),
+         Species = replace(Species, Species == "Piresia sp  Hodkinson 601", "NA"),
+         Species = replace(Species, Species == "Calliandra sp  ERS-2013", "NA"),
+         Species = replace(Species, Species == "Sclerophylax sp  Nee and Bohs 50857", "NA"))
+
+```
 
 Select needed data for WFO.match() and convert to dataframe
 ```{r manipulate data}
 trnL_plant_species <- trnL_plants %>% 
+  filter(Species != "fossil Castanea pollen",
+         Species != "NA") %>% 
   select(Species) %>% 
   distinct()
 
@@ -142,20 +176,10 @@ fuzzy_plants_trnL <- trnL_plant_match %>%
 
 Remove rows that are not needed 
 ```{r row removal}
-#split into two columns
 fuzzy_plants_trnL <- fuzzy_plants_trnL %>% 
-  separate(Species, c('Species', 'Specific.epithet'))
+  mutate(scientificName = replace(scientificName, scientificName == "Diplotaxis erucoides  subsp. cossoniana", "Diplotaxis erucoides")) %>% 
+  distinct(scientificName, .keep_all = TRUE)
 
-
-#remove rows from specific epithet column that are not needed
-fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
-  filter(Specific.epithet != "hybrid",
-         Specific.epithet != "sp")
-
-#combine species and specific epithet columns, fix formatting of Species column and data frame
-fuzzy_plants_trnL<- fuzzy_plants_trnL %>% 
-  unite(Species, Species, Specific.epithet) %>% 
-  mutate(Species = str_replace_all(Species, "_", " "))
 ```
 
 Add updated names to trnL data
@@ -195,16 +219,13 @@ final_updated_trnL %>%
 
 ```
 
-Save final dataframe as a csv
-```{r save as csv}
-write_csv(final_updated_trnL, "data/updated_trnL_reads_WeeTU.csv")
-```
+
 
 Recreate WTUs
 ```{r}
 # Add WeeTUs for Summarizing
 # https://dplyr.tidyverse.org/reference/group_data.html
-taxa_data_trnL <- taxa_data_trnL %>% 
+updated_trnL_reads_WeeTU <- final_updated_trnL %>% 
   mutate(WTU.kingdom = group_indices(., Kingdom),
          WTU.clade1 = group_indices(., Kingdom, Clade1),
          WTU.clade2 = group_indices(., Kingdom, Clade1, Clade2),
@@ -220,3 +241,7 @@ taxa_data_trnL <- taxa_data_trnL %>%
 #write_csv(taxa_data_trnL, "Data/SequencedData/Plants/ProcessedData/trnL_reads_WeeTU.csv")
 ```
 
+Save final dataframe as a csv
+```{r save as csv}
+write_csv(final_updated_trnL, "data/updated_trnL_reads_WeeTU.csv")
+```
