@@ -119,6 +119,7 @@ ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species,
                                verbose = TRUE, 
                                counter = 1000)
 ```
+
 Write csv for plant matches and save to outputs folder
 ```{r write_csv}
 write_csv(trnL_plant_match, "../outputs/ITS2_plant_match.csv")
@@ -190,7 +191,7 @@ final_updated_ITS2 <- updated_ITS2 %>%
 ```
 
 For species that updated to only be identified at Genus level, change species column to NA
-```{r}
+```{r Update species names }
 final_updated_ITS2 <- final_updated_ITS2 %>% 
   mutate(Species = replace(Species, Species == "Hypertelis", "NA"),
          Species = replace(Species, Species == "Streblus", "NA"))
@@ -207,7 +208,7 @@ final_updated_ITS2 %>%
 ```
 
 Recreate WTUs
-```{r}
+```{r create WTU}
 # Add WeeTUs for Summarizing
 # https://dplyr.tidyverse.org/reference/group_data.html
 
