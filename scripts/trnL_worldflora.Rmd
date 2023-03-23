@@ -15,7 +15,7 @@ library(WorldFlora)
 library(tidyverse)
 ```
 
-Download and remember data set
+Download and remember WFO data 
 ```{r WFO remember}
 #WFO.download()
 WFO.remember(WFO.file = "classification.csv")
@@ -23,10 +23,10 @@ WFO.remember(WFO.file = "classification.csv")
 
 Read in trnL data
 ```{r read data}
-trnL_plants <- read_csv("data/trnL_reads_WeeTU.csv")
+trnL_plants <- read_csv("../data/sequenced/trnL_reads_WeeTU.csv")
 ```
 
-Find name issues in trnL data
+Find name issues in trnL data - this includes species with Authorship or other rows with strange names
 ```{r create csv of bad names}
 trnL_name_issues <- trnL_plants %>% 
    distinct(Species) %>% 
@@ -34,17 +34,18 @@ trnL_name_issues <- trnL_plants %>%
    mutate(n_words = str_count(Species, "\\w+")) %>% 
    filter(n_words > 2)
 
-write_csv(trnL_name_issues, "data/trnL_name_issues.csv")
+write_csv(trnL_name_issues, "../outputs/naming_issues/trnL_name_issues.csv")
 ```
 
-Replace "_" with a space with gsub
+Replace "_" with a space with gsub - see comment below
 ```{r gsub}
 #not required to run but here for another example of how to replace characters
 trnL_plants$Species <- gsub("_"," ", trnL_plants$Species)
 ```
 
-Fix naming issues
+Fix naming issues - see comment below
 ```{r fix bad names}
+#do not run - here just to keep - old code
 trnL_plants <- trnL_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
   mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "Chamaecrista sp."), 
@@ -83,7 +84,7 @@ trnL_plants <- trnL_plants %>%
 
 ```
 
-Replace species names with NA's
+Replace names only identified to species level with an "NA" in the "Species" column
 ```{r}
 trnL_plants <- trnL_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
@@ -123,14 +124,17 @@ trnL_plants <- trnL_plants %>%
 
 ```
 
-Select needed data for WFO.match() and convert to dataframe
+Select only the distinct values in the "Species" column, and remove NAs/names that are not essential based on trnL_name_issues.csv file for WFO.match()
 ```{r manipulate data}
 trnL_plant_species <- trnL_plants %>% 
   filter(Species != "fossil Castanea pollen",
          Species != "NA") %>% 
   select(Species) %>% 
   distinct()
+```
 
+Convert to data frame so WFO.match can run properly
+```{r}
 # need to convert trnL_plant_species from a tibble to a dataframe
 trnL_plant_species <- as.data.frame(trnL_plant_species)
 
@@ -156,10 +160,14 @@ trnL_plant_match <- WFO.match(spec.data = trnL_plant_species,
                                verbose = TRUE, 
                                counter = 1000)
 
-# write_csv(trnL_plant_match, "data/trnL_plant_matches.csv")
 ```
 
-Select plants that had fuzzy values and select needed columns
+Write csv for plant matches and save to outputs folder
+```{r write_csv}
+write_csv(trnL_plant_match, "../outputs/trnL_plant_match.csv")
+```
+
+Select plants that had fuzzy values and select needed columns from WFO.match data output
 ```{r select data}
 fuzzy_plants_trnL <- trnL_plant_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
@@ -174,7 +182,7 @@ fuzzy_plants_trnL <- trnL_plant_match %>%
          New.accepted)
 ```
 
-Remove rows that are not needed 
+Keep only distinct updated scientific name matches, and remove subspecies distinction
 ```{r row removal}
 fuzzy_plants_trnL <- fuzzy_plants_trnL %>% 
   mutate(scientificName = replace(scientificName, scientificName == "Diplotaxis erucoides  subsp. cossoniana", "Diplotaxis erucoides")) %>% 
@@ -182,11 +190,14 @@ fuzzy_plants_trnL <- fuzzy_plants_trnL %>%
 
 ```
 
-Add updated names to trnL data
+Add updated names to ITS2 data with a left join
 ```{r update trnL file}
 updated_trnL <- trnL_plants %>% 
   left_join(fuzzy_plants_trnL, by = "Species") 
+```
 
+Rename columns and deselect unneeded columns
+```{r rename columns}
 updated_trnL <- updated_trnL %>% 
   rename(updated.Name = scientificName) %>% 
   rename(updated.genus = genus) %>% 
@@ -195,7 +206,7 @@ updated_trnL <- updated_trnL %>%
   distinct() 
 ```
 
-Replace old names with new names in trnL file
+Replace old names, genus, and family with new names in trnL file using ifelse statement
 ```{r replace names}
 final_updated_trnL <- updated_trnL %>% 
   mutate(Species = if_else(!is.na(updated.Name),
@@ -212,14 +223,12 @@ final_updated_trnL <- updated_trnL %>%
 Quality check to make sure it worked! 
 ```{r quality check}
 final_updated_trnL %>% 
-  filter(Species == "Poa serpana")
+  filter(Species == "Reicheocactus famatinensis")
 
 final_updated_trnL %>% 
   filter(Species == "Lycium bridgesii")
 
 ```
-
-
 
 Recreate WTUs
 ```{r}
@@ -237,13 +246,12 @@ updated_trnL_reads_WeeTU <- final_updated_trnL %>%
                                    Subfamily, Genus),
          WTU.species = group_indices(., Kingdom, Clade1, Clade2, Order, Family, 
                                      Subfamily, Genus, Species))
-
-#write_csv(taxa_data_trnL, "Data/SequencedData/Plants/ProcessedData/trnL_reads_WeeTU.csv")
 ```
 
-Save final dataframe as a csv
+Remove unneeded columns and save final data frame as a csv to outputs folder
 ```{r save as csv}
 updated_trnL_reads_WeeTU <- updated_trnL_reads_WeeTU %>% 
   select(-c(updated.family, updated.genus, updated.Name, New.accepted))
-write_csv(final_updated_trnL, "data/updated_trnL_reads_WeeTU.csv")
+
+write_csv(final_updated_trnL, "../outputs/updated_trnL_reads_WeeTU.csv")
 ```

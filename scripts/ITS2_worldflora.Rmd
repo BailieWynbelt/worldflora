@@ -119,6 +119,10 @@ ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species,
                                verbose = TRUE, 
                                counter = 1000)
 ```
+Write csv for plant matches and save to outputs folder
+```{r write_csv}
+write_csv(trnL_plant_match, "../outputs/ITS2_plant_match.csv")
+```
 
 Select plants that had fuzzy values and select needed columns from WFO.match data output
 ```{r select data}
@@ -207,7 +211,6 @@ Recreate WTUs
 # Add WeeTUs for Summarizing
 # https://dplyr.tidyverse.org/reference/group_data.html
 
-
 updated_ITS2_reads_WeeTU <- final_updated_ITS2 %>% 
   mutate(WTU.domain = group_indices(., Domain),
          WTU.clade1 = group_indices(., Domain, Clade1),
@@ -221,8 +224,6 @@ updated_ITS2_reads_WeeTU <- final_updated_ITS2 %>%
 
 updated_ITS2_reads_WeeTU %>% 
   filter(Species == "Salsola kali")
-
-#write_csv(taxa_data_ITS2, "Data/SequencedData/Plants/ProcessedData/ITS2_reads_WeeTU.csv")
 ```
 
 Save final data frame as a csv to outputs folder
