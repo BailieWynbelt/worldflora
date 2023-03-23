@@ -9,24 +9,24 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Install and load packages
+Install and load required packages
 ```{r install packages}
 library(WorldFlora)
 library(tidyverse)
 ```
 
-Download and remember data set
+Download and remember WFO data 
 ```{r WFO remember}
 #WFO.download
 WFO.remember(WFO.file = "classification.csv")
 ```
 
-Read in ITS2 data and mutate species column
+Read in ITS2 data 
 ```{r read data}
-ITS2_plants <- read_csv("data/ITS2_reads_WeeTU.csv")
+ITS2_plants <- read_csv("../data/sequenced/ITS2_reads_WeeTU.csv")
 ```
 
-Find name issues in ITS2 data
+Find name issues in ITS2 data - this includes species with Authorship or other rows with strange names
 ```{r create csv of bad names}
 ITS2_name_issues <- ITS2_plants %>% 
    distinct(Species) %>% 
@@ -34,17 +34,17 @@ ITS2_name_issues <- ITS2_plants %>%
    mutate(n_words = str_count(Species, "\\w+")) %>% 
    filter(n_words > 2)
 
-write_csv(ITS2_name_issues, "data/ITS2_name_issues.csv")
+write_csv(ITS2_name_issues, "../outputs/naming_issues/ITS2_name_issues.csv")
 ```
 
-Replace "_" with a space with gsub
+Replace "_" with a space with gsub - see comment below
 ```{r gsub}
 #not required to run but here for another example of how to replace characters
 ITS2_plants$Species <- gsub("_"," ", ITS2_plants$Species)
 ```
 
-Remove unneeded names based on ITS2_name_issues
-```{r}
+Remove names that are not essential based on ITS2_name_issues.csv file
+```{r remove nonessential names}
 ITS2_plants <- ITS2_plants %>%
   filter(Species != "Cloning vector pOmni",
          Species != "Rafinesquia environmental sample",
@@ -53,9 +53,9 @@ ITS2_plants <- ITS2_plants %>%
 
 ```
 
-Fix naming issues
+Fix naming issues - see comment below
 ```{r fix bad names}
-#do not run - here just to keep
+#do not run - here just to keep - old code
 ITS2_plants <- ITS2_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
   mutate(Species = replace(Species, Species == "Croton sp. BWvE-2009", "Croton sp."), 
@@ -69,7 +69,7 @@ ITS2_plants <- ITS2_plants %>%
          Species = replace(Species, Species == "Echinocactus sp. MS-2016", "Echinocactus sp."))
 ```
 
-Replace species names with NA's
+Replace names only identified to species level with an "NA" in the "Species" column
 ```{r fix bad names}
 ITS2_plants <- ITS2_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
@@ -84,17 +84,19 @@ ITS2_plants <- ITS2_plants %>%
          Species = replace(Species, Species == "Echinocactus sp. MS-2016", "NA"))
 ```
 
-Select needed data for WFO.match() and convert to dataframe
+Select only the distinct values in the Species column, and remove NA's for WFO.match()
 ```{r manipulate data}
 ITS2_plant_species <- ITS2_plants %>% 
   select(Species) %>% 
   distinct() %>% 
   filter(Species != "NA")
 
+```
 
+Convert to data frame so WFO.match can run properly
+```{r convert to data frame}
 # need to convert ITS2_plant_species from a tibble to a dataframe
 ITS2_plant_species <- as.data.frame(ITS2_plant_species)
-
 ```
 
 Match ITS2 data with WFO data
@@ -118,7 +120,7 @@ ITS2_plants_match <- WFO.match(spec.data = ITS2_plant_species,
                                counter = 1000)
 ```
 
-Select plants that had fuzzy values and select needed columns
+Select plants that had fuzzy values and select needed columns from WFO.match data output
 ```{r select data}
 fuzzy_plants_ITS2 <- ITS2_plants_match %>% 
   filter(Fuzzy == 'TRUE') %>% 
@@ -153,11 +155,14 @@ fuzzy_plants_ITS2 <- fuzzy_plants_ITS2 %>%
   
 ```
 
-Add updated names to ITS2 data
+Add updated names to ITS2 data with a left join
 ```{r update ITS2 file}
 updated_ITS2 <- ITS2_plants %>% 
   left_join(fuzzy_plants_ITS2, by = "Species") 
+```
 
+Rename columns and deselect unneeded columns
+```{r rename columns}
 updated_ITS2 <- updated_ITS2 %>% 
   rename(updated.Name = scientificName) %>% 
   rename(updated.genus = genus) %>% 
@@ -166,7 +171,7 @@ updated_ITS2 <- updated_ITS2 %>%
   distinct() 
 ```
 
-Replace old names, genus, and family with new names in ITS2 file
+Replace old names, genus, and family with new names in ITS2 file using ifelse statement
 ```{r replace names}
 final_updated_ITS2 <- updated_ITS2 %>% 
   mutate(Species = if_else(!is.na(updated.Name),
@@ -220,9 +225,10 @@ updated_ITS2_reads_WeeTU %>%
 #write_csv(taxa_data_ITS2, "Data/SequencedData/Plants/ProcessedData/ITS2_reads_WeeTU.csv")
 ```
 
-Save final dataframe as a csv
+Save final data frame as a csv to outputs folder
 ```{r save as csv}
 updated_ITS2_reads_WeeTU <- updated_ITS2_reads_WeeTU %>% 
   select(-c(updated.family, updated.genus, updated.Name, New.accepted))
-write_csv(updated_ITS2_reads_WeeTU, "data_output/updated_ITS2_reads_WeeTU.csv")
+
+write_csv(updated_ITS2_reads_WeeTU, "../outputs/updated_ITS2_reads_WeeTU.csv")
 ```

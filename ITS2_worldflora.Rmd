@@ -73,7 +73,7 @@ Replace species names with NA's
 ```{r fix bad names}
 ITS2_plants <- ITS2_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
-  mutate(Species = replace(Species, Species == "Croton sp. BWvE-2009", "NA"), #NA`
+  mutate(Species = replace(Species, Species == "Croton sp. BWvE-2009", "NA"), 
          Species = replace(Species, Species == "Marina sp. Lavin 5341", "NA"),
          Species = replace(Species, Species == "Hebecarpa cf. barbeyana Abbott 14637", "NA"),
          Species = replace(Species, Species == "Helichrysum sp. Vitek 02350", "NA"),
