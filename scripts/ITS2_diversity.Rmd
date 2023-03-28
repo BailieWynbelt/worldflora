@@ -1,0 +1,21 @@
+---
+title: "ITS2_diversity"
+author: "Bailie Wynbelt"
+date: "03/28/2023"
+output: github document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##remove panic
+
+##remove plants with less than 10 reads
+
+##run diet diversity
+#calculate pi
+#total reads per species
+#plant read total
+#diversity index
+
