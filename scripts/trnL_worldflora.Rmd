@@ -85,7 +85,7 @@ trnL_plants <- trnL_plants %>%
 ```
 
 Replace names only identified to species level with an "NA" in the "Species" column
-```{r}
+```{r change to NA}
 trnL_plants <- trnL_plants %>% 
   mutate(Species = str_replace_all(Species, "_", " ")) %>% 
   mutate(Species = replace(Species, Species == "Chamaecrista sp  ASC-2009", "NA"),
@@ -120,21 +120,21 @@ trnL_plants <- trnL_plants %>%
          Species = replace(Species, Species == "Catalpa aff  speciosa Olmstead 88-003", "NA"),
          Species = replace(Species, Species == "Piresia sp  Hodkinson 601", "NA"),
          Species = replace(Species, Species == "Calliandra sp  ERS-2013", "NA"),
-         Species = replace(Species, Species == "Sclerophylax sp  Nee and Bohs 50857", "NA"))
+         Species = replace(Species, Species == "Sclerophylax sp  Nee and Bohs 50857", "NA")) %>% 
+  filter(Species != "fossil Castanea pollen")
 
 ```
 
 Select only the distinct values in the "Species" column, and remove NAs/names that are not essential based on trnL_name_issues.csv file for WFO.match()
 ```{r manipulate data}
 trnL_plant_species <- trnL_plants %>% 
-  filter(Species != "fossil Castanea pollen",
-         Species != "NA") %>% 
+  filter(Species != "NA") %>% 
   select(Species) %>% 
   distinct()
 ```
 
 Convert to data frame so WFO.match can run properly
-```{r}
+```{r save as data frame}
 # need to convert trnL_plant_species from a tibble to a dataframe
 trnL_plant_species <- as.data.frame(trnL_plant_species)
 
@@ -231,7 +231,7 @@ final_updated_trnL %>%
 ```
 
 Recreate WTUs
-```{r}
+```{r recreate WTU}
 # Add WeeTUs for Summarizing
 # https://dplyr.tidyverse.org/reference/group_data.html
 updated_trnL_reads_WeeTU <- final_updated_trnL %>% 
